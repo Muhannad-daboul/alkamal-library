@@ -1,0 +1,39 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // أدمن = custom claim أو جلسة admin_sessions في Firestore
+    // (النهج الثاني هو المستخدم على Windows حيث لا تتجدد الـ claims)
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.admin == true ||
+        firestore.exists(/databases/(default)/documents/admin_sessions/$(request.auth.uid))
+      );
+    }
+
+    // ملفات الطباعة — صاحب الملف فقط يكتب
+    // (القراءة عبر downloadURL مع token، لكن نسمح بقراءة authenticated لتسهيل عرض الإدارة)
+    match /print_jobs/{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // معاينات المحاضرات وصور المنتجات والإعلانات — قراءة عامة، الكتابة للأدمن فقط
+    match /lecture_previews/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /ads/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // أي شيء آخر مرفوض افتراضياً
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

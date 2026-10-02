@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name=".MainActivity">
+            <meta-data
+                android:name="io.flutter.embedding.android.DartEntrypointLibraryUri"
+                android:value="package:alkamal_app/main_admin.dart" />
+        </activity>
+    </application>
+</manifest>
